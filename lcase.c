@@ -183,6 +183,27 @@ lcase_sse_cond(char *restrict dst, const char *restrict src, size_t len)
          *  - _mm_cmpgt_epi8 (the pcmpgtb instruction)
          *  - _mm_and_si128 (the pand instruction)
          */
+         __m128i v_x20 = _mm_set1_epi8((char)0x020);
+         __m128i v_chars;
+         __m128i v_uppercase_mask;
+         __m128i v_uppercase_begin = _mm_set1_epi8('A' - 1);
+         __m128i v_uppercase_end = _mm_set1_epi8('Z' + 1);
+         
+         for (int current_char = 0; current_char < len ; current_char += 16) {
+            v_chars = _mm_loadu_si128((__m128i*)(src + current_char));
+            v_uppercase_mask = _mm_and_si128(
+                v_x20, _mm_cmpgt_epi8(
+                    v_chars, v_uppercase_begin
+                )
+            );
+            v_uppercase_mask = _mm_and_si128(
+                v_uppercase_mask, _mm_cmplt_epi8(
+                    v_chars, v_uppercase_end
+                )
+            );
+            v_chars = _mm_or_si128(v_chars, v_uppercase_mask);
+            _mm_storeu_si128((__m128i*)(dst + current_char), v_chars);
+         }
 }
 
 static char *
