@@ -159,6 +159,13 @@ lcase_sse_simple(char *restrict dst, const char *restrict src, size_t len)
          *  - _mm_set1_epi8
          *  - _mm_or_si128 (the por instruction)
          */
+         __m128i v_x20 = _mm_set1_epi8((char)0x20);
+         __m128i v_chars;
+         for (int current_char = 0; current_char < len ; current_char += 16) {
+            v_chars = _mm_loadu_si128((__m128i*)(src + current_char));
+            v_chars = _mm_or_si128(v_chars, v_x20);
+            _mm_storeu_si128((__m128i*)(dst + current_char), v_chars);
+         }
 }
 
 static void
