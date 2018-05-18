@@ -50,13 +50,3 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-
-# Binaries
-lcase_MOVDQA
-lcase_MOVDQU
-lcase_MOVNTDQ
-matmul_BLOCKED
-matmul_SSE
-matmul_SSE_BLOCKED
-matvec
-
