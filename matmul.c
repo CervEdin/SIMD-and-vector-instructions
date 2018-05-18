@@ -259,6 +259,26 @@ matmul_sse()
         /* TASK: Implement your simple matrix multiplication using SSE
          * here.
          */
+         __m128 v4f_matrix_a;
+         __m128 v4f_matrix_b;
+         
+         for (i = 0; i < SIZE; i += 1) {
+            for (j = 0; j < SIZE; j += 1) {
+                v4f_matrix_a = _mm_set1_ps(mat_a[i][j]);
+                for (k = 0; k < SIZE; k += 4) {
+                    v4f_matrix_b = _mm_load_ps(mat_b[j]+k);
+                    _mm_store_ps(mat_c[i] + k,
+                        _mm_add_ps(
+                            _mm_load_ps(mat_c[i] + k),
+                            _mm_mul_ps(
+                                v4f_matrix_a,
+                                v4f_matrix_b
+                            )
+                       )
+                    );
+                }
+            }
+         }
 }
 
 #else
