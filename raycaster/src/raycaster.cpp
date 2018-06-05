@@ -78,6 +78,8 @@ struct Context {
     RayCastVolume rayCastVolume;
     GLuint boundingGeometryProgram;
     GLuint rayCasterProgram;
+    float angle_of_view;
+    float zoom_factor;
     float elapsed_time;
 };
 
@@ -312,7 +314,7 @@ void drawBoundingGeometry(Context &ctx, GLuint program, const MeshVAO &cubeVAO,
     glm::mat4 model = cg::volumeComputeModelMatrix(rayCastVolume.volume);
     model = trackballGetRotationMatrix(ctx.trackball) * model;
     glm::mat4 view = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.0f));
-    glm::mat4 projection = glm::perspective(45.0f * (3.141592f / 180.0f), ctx.aspect, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(ctx.angle_of_view * ctx.zoom_factor, ctx.aspect, 0.1f, 100.0f);
     glm::mat4 mvp = projection * view * model;
 
     glUseProgram(program);
@@ -472,6 +474,15 @@ void resizeCallback(GLFWwindow* window, int width, int height)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void scrollCallback(GLFWwindow* window, double x, double y) {
+	if (ImGui::GetIO().WantCaptureMouse) { 
+	    return; // Skip other handling
+	} else {
+	    Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
+        ctx->zoom_factor = ctx->zoom_factor + 0.03f*(float)y;
+    }
+}
+
 int main(void)
 {
     Context ctx;
@@ -483,8 +494,10 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    ctx.width = 500;
-    ctx.height = 500;
+    ctx.width = 1200;
+    ctx.height = 1200;
+    ctx.angle_of_view = glm::radians(45.0f);
+    ctx.zoom_factor = 1.0f;
     ctx.aspect = float(ctx.width) / float(ctx.height);
     ctx.window = glfwCreateWindow(ctx.width, ctx.height, "Volume rendering", nullptr, nullptr);
     glfwMakeContextCurrent(ctx.window);
@@ -494,6 +507,7 @@ int main(void)
     glfwSetMouseButtonCallback(ctx.window, mouseButtonCallback);
     glfwSetCursorPosCallback(ctx.window, cursorPosCallback);
     glfwSetFramebufferSizeCallback(ctx.window, resizeCallback);
+    glfwSetScrollCallback(ctx.window, scrollCallback);
 
     // Load OpenGL functions
     glewExperimental = true;
