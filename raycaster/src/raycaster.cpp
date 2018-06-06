@@ -331,6 +331,13 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
 	glBindTexture(GL_TEXTURE_2D, ctx.rayCastVolume.backFaceTexture);
 	glUniform1i(glGetUniformLocation(program, "u_backFaceTexture"), 1);
 
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_3D, ctx.rayCastVolume.volumeTexture);
+	glUniform1i(glGetUniformLocation(program, "u_volumeTexture"), 2);
+
+	glEnable(GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glBindVertexArray(quadVAO.vao);
 	glDrawArrays(GL_TRIANGLES, 0, quadVAO.numVertices);
 	glBindVertexArray(ctx.defaultVAO);
@@ -365,7 +372,10 @@ void display(Context &ctx) {
 	drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0.2f, 0.2f, 0.2f, 0.0f); //specify clear values for the color buffers RGBA
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers to preset values
 	glCullFace(GL_BACK);
+	glDisable(GL_CULL_FACE);
 	/*
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, ctx.rayCastVolume.backFaceFBO);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
