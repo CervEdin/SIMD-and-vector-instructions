@@ -322,6 +322,15 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
 
     // Set uniforms and bind textures here...
 
+    // Textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ctx.rayCastVolume.frontFaceTexture);
+    glUniform1i(glGetUniformLocation(program, "u_frontFaceTexture"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, ctx.rayCastVolume.backFaceTexture);
+    glUniform1i(glGetUniformLocation(program, "u_backFaceTexture"), 1);
+
     glBindVertexArray(quadVAO.vao);
     glDrawArrays(GL_TRIANGLES, 0, quadVAO.numVertices);
     glBindVertexArray(ctx.defaultVAO);
@@ -337,28 +346,43 @@ void display(Context &ctx) {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    /*
+//    /*
     glBindFramebuffer(GL_FRAMEBUFFER, ctx.rayCastVolume.frontFaceFBO);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    */
+//    */
     drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
+//    /*
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//    */
+    // Render the back faces of the volume bounding box to a texture via the backFaceFBO
+//    /*
+    glCullFace(GL_FRONT);
+    glBindFramebuffer(GL_FRAMEBUFFER, ctx.rayCastVolume.backFaceFBO);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glCullFace(GL_BACK);
     /*
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, ctx.rayCastVolume.backFaceFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, ctx.width, ctx.height,
+                      0, 0, ctx.width, ctx.height,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     */
-    // Render the back faces of the volume bounding box to a texture
-    // via the backFaceFBO
-    /*
-    drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
+
     //...
-    */
+//    */
     // Perform ray-casting
-    /* 
+    
     //...
     glEnable(GL_DEPTH_TEST);
     drawRayCasting(ctx, ctx.rayCasterProgram, ctx.quadVAO, ctx.rayCastVolume);
     //...
-    */
 }
 
 void reloadShaders(Context *ctx) {
@@ -396,33 +420,45 @@ void errorCallback(int /*error*/, const char* description) {
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Forward event to GUI
     ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
-    if (ImGui::GetIO().WantCaptureKeyboard) { return; }  // Skip other handling
-
-    Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
-    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-        reloadShaders(ctx);
+    if (ImGui::GetIO().WantCaptureKeyboard) { 
+        return;  // Skip other handling
+    } else {
+        Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
+        if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+            reloadShaders(ctx);
+        } else if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+            glfwDestroyWindow(ctx->window);
+            glfwTerminate();
+            std::exit(EXIT_SUCCESS);
+        }
     }
 }
 
 void charCallback(GLFWwindow* window, unsigned int codepoint) {
     // Forward event to GUI
     ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
-    if (ImGui::GetIO().WantTextInput) { return; }  // Skip other handling
+    if (ImGui::GetIO().WantTextInput) {
+        return;
+    } else {
+
+    }
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     // Forward event to GUI
     ImGui_ImplGlfwGL3_MouseButtonCallback(window, button, action, mods);
-    if (ImGui::GetIO().WantCaptureMouse) { return; }  // Skip other handling
-
-    double x, y;
-    glfwGetCursorPos(window, &x, &y);
-
-    Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
-    if (action == GLFW_PRESS) {
-        mouseButtonPressed(ctx, button, x, y);
+    if (ImGui::GetIO().WantCaptureMouse) { 
+        return;  // Skip other handling
     } else {
-        mouseButtonReleased(ctx, button, x, y);
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+
+        Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
+        if (action == GLFW_PRESS) {
+            mouseButtonPressed(ctx, button, x, y);
+        } else {
+            mouseButtonReleased(ctx, button, x, y);
+        }
     }
 }
 
@@ -453,10 +489,10 @@ void resizeCallback(GLFWwindow* window, int width, int height) {
 }
 
 void scrollCallback(GLFWwindow* window, double x, double y) {
-	if (ImGui::GetIO().WantCaptureMouse) { 
-	    return; // Skip other handling
-	} else {
-	    Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
+    if (ImGui::GetIO().WantCaptureMouse) { 
+        return; // Skip other handling
+    } else {
+        Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
         ctx->zoom_factor = ctx->zoom_factor + 0.03f*(float)y;
     }
 }
