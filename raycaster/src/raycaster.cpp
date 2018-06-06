@@ -84,20 +84,17 @@ struct Context {
 };
 
 // Returns the value of an environment variable
-std::string getEnvVar(const std::string &name)
-{
+std::string getEnvVar(const std::string &name) {
     char const* value = std::getenv(name.c_str());
     if (value == nullptr) {
         return std::string();
-    }
-    else {
+    } else {
         return std::string(value);
     }
 }
 
 // Returns the absolute path to the shader directory
-std::string shaderDir(void)
-{
+std::string shaderDir(void) {
     std::string rootDir = getEnvVar("ASSIGNMENT4_ROOT");
     if (rootDir.empty()) {
         std::cout << "Error: ASSIGNMENT4_ROOT is not set." << std::endl;
@@ -107,8 +104,7 @@ std::string shaderDir(void)
 }
 
 // Returns the absolute path to the 3D model directory
-std::string modelDir(void)
-{
+std::string modelDir(void) {
     std::string rootDir = getEnvVar("ASSIGNMENT4_ROOT");
     if (rootDir.empty()) {
         std::cout << "Error: ASSIGNMENT4_ROOT is not set." << std::endl;
@@ -118,8 +114,7 @@ std::string modelDir(void)
 }
 
 // Returns the absolute path to the cubemap texture directory
-std::string cubemapDir(void)
-{
+std::string cubemapDir(void) {
     std::string rootDir = getEnvVar("ASSIGNMENT4_ROOT");
     if (rootDir.empty()) {
         std::cout << "Error: ASSIGNMENT4_ROOT is not set." << std::endl;
@@ -129,8 +124,7 @@ std::string cubemapDir(void)
 }
 
 // Returns the absolute path to the volume data directory
-std::string volumeDataDir(void)
-{
+std::string volumeDataDir(void) {
     std::string rootDir = getEnvVar("ASSIGNMENT4_ROOT");
     if (rootDir.empty()) {
         std::cout << "Error: ASSIGNMENT4_ROOT is not set." << std::endl;
@@ -139,8 +133,7 @@ std::string volumeDataDir(void)
     return rootDir + "/raycaster/data/";
 }
 
-void loadMesh(const std::string &filename, Mesh *mesh)
-{
+void loadMesh(const std::string &filename, Mesh *mesh) {
     OBJMesh obj_mesh;
     objMeshLoad(obj_mesh, filename);
     mesh->vertices = obj_mesh.vertices;
@@ -148,8 +141,7 @@ void loadMesh(const std::string &filename, Mesh *mesh)
     mesh->indices = obj_mesh.indices;
 }
 
-void loadRayCastVolume(Context &ctx, const std::string &filename, RayCastVolume *rayCastVolume)
-{
+void loadRayCastVolume(Context &ctx, const std::string &filename, RayCastVolume *rayCastVolume) {
     cg::VolumeBase volume;
     cg::volumeLoadVTK(&volume, (volumeDataDir() + "/foot.vtk"));
     rayCastVolume->volume = volume;
@@ -210,8 +202,7 @@ void loadRayCastVolume(Context &ctx, const std::string &filename, RayCastVolume 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void createMeshVAO(Context &ctx, const Mesh &mesh, MeshVAO *meshVAO)
-{
+void createMeshVAO(Context &ctx, const Mesh &mesh, MeshVAO *meshVAO) {
     // Generates and populates a VBO for the vertices
     glGenBuffers(1, &(meshVAO->vertexVBO));
     glBindBuffer(GL_ARRAY_BUFFER, meshVAO->vertexVBO);
@@ -247,8 +238,7 @@ void createMeshVAO(Context &ctx, const Mesh &mesh, MeshVAO *meshVAO)
     meshVAO->numIndices = mesh.indices.size();
 }
 
-void createQuadVAO(Context &ctx, MeshVAO *meshVAO)
-{
+void createQuadVAO(Context &ctx, MeshVAO *meshVAO) {
     const glm::vec3 vertices[] = {
         glm::vec3(-1.0f, -1.0f,  0.0f),
         glm::vec3(1.0f, -1.0f,  0.0f),
@@ -277,16 +267,14 @@ void createQuadVAO(Context &ctx, MeshVAO *meshVAO)
     meshVAO->numIndices = 0;
 }
 
-void initializeTrackball(Context &ctx)
-{
+void initializeTrackball(Context &ctx) {
     double radius = double(std::min(ctx.width, ctx.height)) / 2.0;
     ctx.trackball.radius = radius;
     glm::vec2 center = glm::vec2(ctx.width, ctx.height) / 2.0f;
     ctx.trackball.center = center;
 }
 
-void init(Context &ctx)
-{
+void init(Context &ctx) {
     // Load shaders
     ctx.boundingGeometryProgram = loadShaderProgram(shaderDir() + "boundingGeometry.vert",
                                                     shaderDir() + "boundingGeometry.frag");
@@ -309,8 +297,7 @@ void init(Context &ctx)
 
 // MODIFY THIS FUNCTION
 void drawBoundingGeometry(Context &ctx, GLuint program, const MeshVAO &cubeVAO,
-                          const RayCastVolume &rayCastVolume)
-{
+                          const RayCastVolume &rayCastVolume) {
     glm::mat4 model = cg::volumeComputeModelMatrix(rayCastVolume.volume);
     model = trackballGetRotationMatrix(ctx.trackball) * model;
     glm::mat4 view = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.0f));
@@ -329,9 +316,8 @@ void drawBoundingGeometry(Context &ctx, GLuint program, const MeshVAO &cubeVAO,
 }
 
 // MODIFY THIS FUNCTION
-void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
-                    const RayCastVolume &rayCastVolume)
-{
+void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO, 
+                    const RayCastVolume &rayCastVolume) {
     glUseProgram(program);
 
     // Set uniforms and bind textures here...
@@ -343,37 +329,39 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
     glUseProgram(0);
 }
 
-void display(Context &ctx)
-{
-    glClearColor(0.2, 0.2, 0.2, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void display(Context &ctx) {
+    glClearColor(0.2, 0.2, 0.2, 0.0); //specify clear values for the color buffers RGBA
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers to preset values
 
-    // Render the front faces of the volume bounding box to a texture
-    // via the frontFaceFBO
+    // Render the front faces of the volume bounding box to a texture via the frontFaceFBO
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    // glBindFramebuffer(GL_FRAMEBUFFER, ctx.rayCastVolume.frontFaceFBO);
-    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    // glClear(GL_COLOR_BUFFER_BIT);
+    /*
+    glBindFramebuffer(GL_FRAMEBUFFER, ctx.rayCastVolume.frontFaceFBO);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    */
     drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    /*
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    */
     // Render the back faces of the volume bounding box to a texture
     // via the backFaceFBO
-    // ...
-    // drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
-    // ...
-
+    /*
+    drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
+    //...
+    */
     // Perform ray-casting
-    // ...
-    // glEnable(GL_DEPTH_TEST);
-    // drawRayCasting(ctx, ctx.rayCasterProgram, ctx.quadVAO, ctx.rayCastVolume);
-    // ...
+    /* 
+    //...
+    glEnable(GL_DEPTH_TEST);
+    drawRayCasting(ctx, ctx.rayCasterProgram, ctx.quadVAO, ctx.rayCastVolume);
+    //...
+    */
 }
 
-void reloadShaders(Context *ctx)
-{
+void reloadShaders(Context *ctx) {
     glDeleteProgram(ctx->boundingGeometryProgram);
     ctx->boundingGeometryProgram = loadShaderProgram(shaderDir() + "boundingGeometry.vert",
                                                      shaderDir() + "boundingGeometry.frag");
@@ -382,35 +370,30 @@ void reloadShaders(Context *ctx)
                                               shaderDir() + "rayCaster.frag");
 }
 
-void mouseButtonPressed(Context *ctx, int button, int x, int y)
-{
+void mouseButtonPressed(Context *ctx, int button, int x, int y) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         ctx->trackball.center = glm::vec2(x, y);
         trackballStartTracking(ctx->trackball, glm::vec2(x, y));
     }
 }
 
-void mouseButtonReleased(Context *ctx, int button, int x, int y)
-{
+void mouseButtonReleased(Context *ctx, int button, int x, int y) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         trackballStopTracking(ctx->trackball);
     }
 }
 
-void moveTrackball(Context *ctx, int x, int y)
-{
+void moveTrackball(Context *ctx, int x, int y) {
     if (ctx->trackball.tracking) {
         trackballMove(ctx->trackball, glm::vec2(x, y));
     }
 }
 
-void errorCallback(int /*error*/, const char* description)
-{
+void errorCallback(int /*error*/, const char* description) {
     std::cerr << description << std::endl;
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     // Forward event to GUI
     ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
     if (ImGui::GetIO().WantCaptureKeyboard) { return; }  // Skip other handling
@@ -421,15 +404,13 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
 }
 
-void charCallback(GLFWwindow* window, unsigned int codepoint)
-{
+void charCallback(GLFWwindow* window, unsigned int codepoint) {
     // Forward event to GUI
     ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
     if (ImGui::GetIO().WantTextInput) { return; }  // Skip other handling
 }
 
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     // Forward event to GUI
     ImGui_ImplGlfwGL3_MouseButtonCallback(window, button, action, mods);
     if (ImGui::GetIO().WantCaptureMouse) { return; }  // Skip other handling
@@ -440,22 +421,19 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
     if (action == GLFW_PRESS) {
         mouseButtonPressed(ctx, button, x, y);
-    }
-    else {
+    } else {
         mouseButtonReleased(ctx, button, x, y);
     }
 }
 
-void cursorPosCallback(GLFWwindow* window, double x, double y)
-{
+void cursorPosCallback(GLFWwindow* window, double x, double y) {
     if (ImGui::GetIO().WantCaptureMouse) { return; }  // Skip other handling   
 
     Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
     moveTrackball(ctx, x, y);
 }
 
-void resizeCallback(GLFWwindow* window, int width, int height)
-{
+void resizeCallback(GLFWwindow* window, int width, int height) {
     Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
     ctx->width = width;
     ctx->height = height;
@@ -483,8 +461,7 @@ void scrollCallback(GLFWwindow* window, double x, double y) {
     }
 }
 
-int main(void)
-{
+int main(void) {
     Context ctx;
 
     // Create a GLFW window
@@ -494,12 +471,14 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    // Initialize context variables
     ctx.width = 1200;
     ctx.height = 1200;
     ctx.angle_of_view = glm::radians(45.0f);
     ctx.zoom_factor = 1.0f;
     ctx.aspect = float(ctx.width) / float(ctx.height);
     ctx.window = glfwCreateWindow(ctx.width, ctx.height, "Volume rendering", nullptr, nullptr);
+    // Initialize window object
     glfwMakeContextCurrent(ctx.window);
     glfwSetWindowUserPointer(ctx.window, &ctx);
     glfwSetKeyCallback(ctx.window, keyCallback);
@@ -533,6 +512,7 @@ int main(void)
         ctx.elapsed_time = glfwGetTime();
         ImGui_ImplGlfwGL3_NewFrame();
         display(ctx);
+        ImGui::Text("Hello world");
         ImGui::Render();
         glfwSwapBuffers(ctx.window);
     }
