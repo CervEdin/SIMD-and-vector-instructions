@@ -585,7 +585,9 @@ int main(void) {
 		display(ctx);
 		ImGui::ColorEdit3("Background color", &ctx.background_color[0]); // change background color
 		ImGui::SliderFloat("Step size", &ctx.ray_step_length, 0.001f, 0.1f); // ray-step length
-		ImGui::SliderFloat("TF lower", &ctx.tf_lower, 0.0f, 1.0f); // ray-step length
+		if (ctx.render_mode == 0) {
+			ImGui::SliderFloat("TF lower", &ctx.tf_lower, 0.0f, 1.0f); // ray-step length
+		}
 		if (ImGui::Button("Switch mode")) { // switch ray-casting mode
 			ctx.render_mode = (ctx.render_mode == 0) ? 1 : 0;
 		}
@@ -598,6 +600,9 @@ int main(void) {
 			ImGui::ColorEdit3("Ambient light", &ctx.ambient_color[0]);
 			ImGui::ColorEdit3("Specular light", &ctx.specular_color[0]);
 			ImGui::SliderFloat("Specular power", &ctx.specular_power, 0.0f, 100.0f);
+			ImGui::SliderFloat("Light.x", &ctx.pos_light_pos[0], -10.0f, 10.0f);
+			ImGui::SliderFloat("Light.y", &ctx.pos_light_pos[1], -10.0f, 10.0f);
+			ImGui::SliderFloat("Light.z", &ctx.pos_light_pos[2], -10.0f, 10.0f);
 		}
 		ImGui::Render();
 		glfwSwapBuffers(ctx.window);

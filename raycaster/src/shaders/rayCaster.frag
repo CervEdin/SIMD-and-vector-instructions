@@ -33,7 +33,7 @@ vec4 gradient_estimation(vec3 uvw, vec3 position) {
 	sample1.z = texture(u_volumeTexture, uvw - vec3(0.0, 0.0, u_delta)).x;
 	sample2.z = texture(u_volumeTexture, uvw + vec3(0.0, 0.0, u_delta)).x;
 	vec3 normal = normalize(sample2 - sample1);
-	vec3 light = normalize(u_pos_light_pos - position);
+	vec3 light = normalize(u_pos_light_pos - uvw);
 	vec3 view = normalize(-position);
 	vec3 half_way = normalize(light + view);
 	vec3 illumination_ambient = u_ambient_color;
