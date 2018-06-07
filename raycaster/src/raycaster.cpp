@@ -321,6 +321,8 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
 	glUseProgram(program);
 
 	// Set uniforms and bind textures here...
+	// Uniforms
+	glUniform1i(glGetUniformLocation(program, "u_render_mode"), 0);
 
 	// Textures
 	glActiveTexture(GL_TEXTURE0);
