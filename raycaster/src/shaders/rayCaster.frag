@@ -6,27 +6,28 @@ in vec2 v_texcoord;
 out vec4 frag_color;
 
 uniform int u_render_mode;
+uniform float u_ray_step;
+uniform float u_threshold;
+uniform float u_delta;
 uniform sampler3D u_volumeTexture;
 uniform sampler2D u_backFaceTexture;
 uniform sampler2D u_frontFaceTexture;
 
 vec4 gradient_estimation(vec3 uvw) {
 	vec3 sample1, sample2;
-	float delta = 0.1;
-	float threshold = 0.1;
 	float sample = texture(u_volumeTexture, uvw).x;
 	vec4 result = vec4(sample);
-	if (result.a > threshold) {
-		sample1.x = texture(u_volumeTexture, uvw - vec3(delta, 0.0, 0.0)).x;
-		sample2.x = texture(u_volumeTexture, uvw + vec3(delta, 0.0, 0.0)).x;
-		sample1.y = texture(u_volumeTexture, uvw - vec3(0.0, delta, 0.0)).x;
-		sample2.y = texture(u_volumeTexture, uvw + vec3(0.0, delta, 0.0)).x;
-		sample1.z = texture(u_volumeTexture, uvw - vec3(0.0, 0.0, delta)).x;
-		sample2.z = texture(u_volumeTexture, uvw + vec3(0.0, 0.0, delta)).x;
-		vec3 normal = normalize(sample2 - sample1);
-		result.rgb = normal;
-		result.a = 1.0;
-	}
+	//if (result.a > u_threshold) {
+	sample1.x = texture(u_volumeTexture, uvw - vec3(u_delta, 0.0, 0.0)).x;
+	sample2.x = texture(u_volumeTexture, uvw + vec3(u_delta, 0.0, 0.0)).x;
+	sample1.y = texture(u_volumeTexture, uvw - vec3(0.0, u_delta, 0.0)).x;
+	sample2.y = texture(u_volumeTexture, uvw + vec3(0.0, u_delta, 0.0)).x;
+	sample1.z = texture(u_volumeTexture, uvw - vec3(0.0, 0.0, u_delta)).x;
+	sample2.z = texture(u_volumeTexture, uvw + vec3(0.0, 0.0, u_delta)).x;
+	vec3 normal = normalize(sample2 - sample1);
+	result.rgb = normal;
+	result.a = 1.0;
+	//}
 	return result;
 }
 
@@ -45,7 +46,7 @@ void main()
 
 	// Given the ray starting points and direction vectors, a ray is cast from each pixel/fragment in the viewport through the 3D volume image. The rays enters the volume at the frontfaces of the bounding box and sample (look up) the voxel intensity values at even intervals until they hit the backfaces of the bounding box. Each fragment in the viewport can then be colored according to the voxel intensity values found along the corresponding ray.
 	
-	vec3 step = ray_direction.xyz * 0.001;
+	vec3 step = ray_direction.xyz * u_ray_step;
 	
 	if (u_render_mode == 0) {
 		// Maximum Intensity Projection (MIP)
@@ -64,11 +65,10 @@ void main()
 	} else if (u_render_mode == 1) {
 		// Iso-surface
 		float value = 0.0;
-		float threshold = 0.1;
 
 		while (length(ray_position - ray_start) < ray_direction.a) {
 			value = texture(u_volumeTexture, ray_position).r;
-			if (value > threshold) {
+			if (value > u_threshold) {
 				color = gradient_estimation(ray_position);
 				break;
 			}

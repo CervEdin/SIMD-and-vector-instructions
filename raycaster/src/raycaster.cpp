@@ -81,7 +81,11 @@ struct Context {
 	float angle_of_view;
 	float zoom_factor;
 	float elapsed_time;
+	float ray_step_length;
 	glm::vec3 background_color;
+	int render_mode;
+	float threshold;
+	float delta;
 };
 
 // Returns the value of an environment variable
@@ -281,6 +285,14 @@ void init(Context &ctx) {
 													shaderDir() + "boundingGeometry.frag");
 	ctx.rayCasterProgram = loadShaderProgram(shaderDir() + "rayCaster.vert",
 											 shaderDir() + "rayCaster.frag");
+	ctx.render_mode = 0;
+	ctx.angle_of_view = glm::radians(45.0f);
+	ctx.zoom_factor = 1.0f;
+	ctx.aspect = float(ctx.width) / float(ctx.height);
+	ctx.background_color = glm::vec3(0.2);
+	ctx.ray_step_length = 0.1;
+	ctx.threshold = 0.1;
+	ctx.delta = 0.1;
 
 	// Load bounding geometry (2-unit cube)
 	loadMesh((modelDir() + "cube.obj"), &ctx.cubeMesh);
@@ -323,7 +335,10 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
 
 	// Set uniforms and bind textures here...
 	// Uniforms
-	glUniform1i(glGetUniformLocation(program, "u_render_mode"), 0);
+	glUniform1i(glGetUniformLocation(program, "u_render_mode"), ctx.render_mode);
+	glUniform1f(glGetUniformLocation(program, "u_ray_step"), ctx.ray_step_length);
+	glUniform1f(glGetUniformLocation(program, "u_threshold"), ctx.threshold);
+	glUniform1f(glGetUniformLocation(program, "u_delta"), ctx.delta);
 
 	// Textures
 	glActiveTexture(GL_TEXTURE0);
@@ -501,12 +516,8 @@ int main(void) {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	// Initialize context variables
-	ctx.width = 1200;
-	ctx.height = 1200;
-	ctx.angle_of_view = glm::radians(45.0f);
-	ctx.zoom_factor = 1.0f;
-	ctx.aspect = float(ctx.width) / float(ctx.height);
-	ctx.background_color = glm::vec3(0.2);
+	ctx.width = 1500;
+	ctx.height = 1500;
 	ctx.window = glfwCreateWindow(ctx.width, ctx.height, "Volume rendering", nullptr, nullptr);
 	// Initialize window object
 	glfwMakeContextCurrent(ctx.window);
@@ -543,9 +554,15 @@ int main(void) {
 		ImGui_ImplGlfwGL3_NewFrame();
 		display(ctx);
 		ImGui::ColorEdit3("Background color", &ctx.background_color[0]); // change background color
-		// ray-step length
-		// switch ray-casting mode
+		ImGui::SliderFloat("Step size", &ctx.ray_step_length, 0.001f, 0.1f); // ray-step length
+		if (ImGui::Button("Switch mode")) { // switch ray-casting mode
+			ctx.render_mode = (ctx.render_mode == 0) ? 1 : 0;
+		}
 		// manipulate transfer function (not for iso surface rendering)
+		if (ctx.render_mode == 1) {
+			ImGui::SliderFloat("Threshold", &ctx.threshold, 0.0f, 1.0f);
+			ImGui::SliderFloat("Delta", &ctx.delta, 0.001f, 0.1f);
+		}
 		ImGui::Render();
 		glfwSwapBuffers(ctx.window);
 	}
