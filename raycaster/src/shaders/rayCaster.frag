@@ -13,11 +13,18 @@ uniform sampler3D u_volumeTexture;
 uniform sampler2D u_backFaceTexture;
 uniform sampler2D u_frontFaceTexture;
 
-vec4 gradient_estimation(vec3 uvw) {
+uniform vec3 u_background_color;
+
+uniform vec3 u_pos_light_pos;
+uniform vec3 u_pos_light_col;
+uniform vec3 u_ambient_color;
+uniform vec3 u_diffuse_color;
+uniform vec3 u_specular_color;
+uniform float u_specular_power;
+
+vec4 gradient_estimation(vec3 uvw, vec3 position) {
 	vec3 sample1, sample2;
 	float sample = texture(u_volumeTexture, uvw).x;
-	vec4 result = vec4(sample);
-	//if (result.a > u_threshold) {
 	sample1.x = texture(u_volumeTexture, uvw - vec3(u_delta, 0.0, 0.0)).x;
 	sample2.x = texture(u_volumeTexture, uvw + vec3(u_delta, 0.0, 0.0)).x;
 	sample1.y = texture(u_volumeTexture, uvw - vec3(0.0, u_delta, 0.0)).x;
@@ -25,10 +32,20 @@ vec4 gradient_estimation(vec3 uvw) {
 	sample1.z = texture(u_volumeTexture, uvw - vec3(0.0, 0.0, u_delta)).x;
 	sample2.z = texture(u_volumeTexture, uvw + vec3(0.0, 0.0, u_delta)).x;
 	vec3 normal = normalize(sample2 - sample1);
-	result.rgb = normal;
-	result.a = 1.0;
-	//}
-	return result;
+	vec3 light = normalize(u_pos_light_pos - position);
+	vec3 view = normalize(-position);
+	vec3 half_way = normalize(light + view);
+	vec3 illumination_ambient = u_ambient_color;
+	vec3 illumination_diffuse = u_diffuse_color * u_pos_light_col * max(dot(normal, light), 0);
+	float specAngle = max(dot(normal, half_way), 0.0);
+	vec3 illumination_specular = u_specular_color * u_pos_light_col * pow(specAngle, u_specular_power);
+	vec3 result = vec3(0.0);
+    result += illumination_ambient;
+	result += illumination_diffuse;
+	result += illumination_specular;
+    result = pow(result, vec3(1.0/2.2)); // sRGB gamma correction
+	vec4 color = vec4(result, 1.0);
+	return color;
 }
 
 void main()
@@ -50,7 +67,7 @@ void main()
 	
 	if (u_render_mode == 0) {
 		// Maximum Intensity Projection (MIP)
-		float intensity = 0.2;
+		float intensity = 0.0;
 		float value = 0.0;
 
 		while (length(ray_position - ray_start) < ray_direction.a) {
@@ -60,7 +77,11 @@ void main()
 			}
 			ray_position += step;
 		}
-		color.rgb = vec3(intensity);
+		if (intensity > 0.0) {
+			color.rgb = vec3(intensity);
+		} else {
+			color.rgb = u_background_color;
+		}
 		color.a = 1.0;
 	} else if (u_render_mode == 1) {
 		// Iso-surface
@@ -68,8 +89,8 @@ void main()
 
 		while (length(ray_position - ray_start) < ray_direction.a) {
 			value = texture(u_volumeTexture, ray_position).r;
-			if (value > u_threshold) {
-				color = gradient_estimation(ray_position);
+			if (value >= u_threshold) {
+				color = gradient_estimation(ray_position, ray_direction.xyz);
 				break;
 			}
 			ray_position += step;

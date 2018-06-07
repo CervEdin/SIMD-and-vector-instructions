@@ -86,6 +86,13 @@ struct Context {
 	int render_mode;
 	float threshold;
 	float delta;
+	
+	glm::vec3 pos_light_pos;
+	glm::vec3 pos_light_col;
+	glm::vec3 diffuse_color;
+	glm::vec3 ambient_color;
+	glm::vec3 specular_color;
+	float specular_power;
 };
 
 // Returns the value of an environment variable
@@ -289,10 +296,17 @@ void init(Context &ctx) {
 	ctx.angle_of_view = glm::radians(45.0f);
 	ctx.zoom_factor = 1.0f;
 	ctx.aspect = float(ctx.width) / float(ctx.height);
-	ctx.background_color = glm::vec3(0.2);
-	ctx.ray_step_length = 0.1;
-	ctx.threshold = 0.1;
-	ctx.delta = 0.1;
+	ctx.background_color = glm::vec3(0.0f);
+	ctx.ray_step_length = 0.001;
+	ctx.threshold = 0.35;
+	ctx.delta = 0.01;
+
+	ctx.pos_light_pos = glm::vec3(5.f, 2.0f, .0f);
+	ctx.pos_light_col = glm::vec3(1.f); // Positional light color, white
+	ctx.diffuse_color = glm::vec3(0.5f);
+	ctx.ambient_color = glm::vec3(0.0f);
+	ctx.specular_color = glm::vec3(0.1f, 0.12f, 0.1f);
+	ctx.specular_power = 2.5f;
 
 	// Load bounding geometry (2-unit cube)
 	loadMesh((modelDir() + "cube.obj"), &ctx.cubeMesh);
@@ -316,10 +330,12 @@ void drawBoundingGeometry(Context &ctx, GLuint program, const MeshVAO &cubeVAO,
 	glm::mat4 view = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.0f));
 	glm::mat4 projection = glm::perspective(ctx.angle_of_view * ctx.zoom_factor, ctx.aspect, 0.1f, 100.0f);
 	glm::mat4 mvp = projection * view * model;
+	glm::mat4 mv = view * model;
 
 	glUseProgram(program);
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "u_mvp"), 1, GL_FALSE, &mvp[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(program, "u_mv"), 1, GL_FALSE, &mv[0][0]);
 
 	glBindVertexArray(cubeVAO.vao);
 	glDrawElements(GL_TRIANGLES, cubeVAO.numIndices, GL_UNSIGNED_INT, 0);
@@ -331,14 +347,25 @@ void drawBoundingGeometry(Context &ctx, GLuint program, const MeshVAO &cubeVAO,
 // MODIFY THIS FUNCTION
 void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO, 
 					const RayCastVolume &rayCastVolume) {
+
 	glUseProgram(program);
 
 	// Set uniforms and bind textures here...
 	// Uniforms
+
 	glUniform1i(glGetUniformLocation(program, "u_render_mode"), ctx.render_mode);
 	glUniform1f(glGetUniformLocation(program, "u_ray_step"), ctx.ray_step_length);
 	glUniform1f(glGetUniformLocation(program, "u_threshold"), ctx.threshold);
 	glUniform1f(glGetUniformLocation(program, "u_delta"), ctx.delta);
+    
+   	glUniform3fv(glGetUniformLocation(program, "u_background_color"), 1, &ctx.background_color[0]);
+
+	glUniform3fv(glGetUniformLocation(program, "u_pos_light_pos"), 1, &ctx.pos_light_pos[0]);
+	glUniform3fv(glGetUniformLocation(program, "u_pos_light_col"), 1, &ctx.pos_light_col[0]);
+	glUniform3fv(glGetUniformLocation(program, "u_ambient_color"), 1, &ctx.ambient_color[0]);
+	glUniform3fv(glGetUniformLocation(program, "u_diffuse_color"), 1, &ctx.diffuse_color[0]);
+	glUniform3fv(glGetUniformLocation(program, "u_specular_color"), 1, &ctx.specular_color[0]);
+	glUniform1f(glGetUniformLocation(program, "u_specular_power"), ctx.specular_power);
 
 	// Textures
 	glActiveTexture(GL_TEXTURE0);
@@ -562,6 +589,11 @@ int main(void) {
 		if (ctx.render_mode == 1) {
 			ImGui::SliderFloat("Threshold", &ctx.threshold, 0.0f, 1.0f);
 			ImGui::SliderFloat("Delta", &ctx.delta, 0.001f, 0.1f);
+			ImGui::ColorEdit3("Positional light", &ctx.pos_light_col[0]);
+			ImGui::ColorEdit3("Diffuse light", &ctx.diffuse_color[0]);
+			ImGui::ColorEdit3("Ambient light", &ctx.ambient_color[0]);
+			ImGui::ColorEdit3("Specular light", &ctx.specular_color[0]);
+			ImGui::SliderFloat("Specular power", &ctx.specular_power, 0.0f, 100.0f);
 		}
 		ImGui::Render();
 		glfwSwapBuffers(ctx.window);
