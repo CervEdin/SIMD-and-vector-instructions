@@ -542,7 +542,10 @@ int main(void) {
 		ctx.elapsed_time = glfwGetTime();
 		ImGui_ImplGlfwGL3_NewFrame();
 		display(ctx);
-		ImGui::ColorEdit3("Background color", &ctx.background_color[0]);
+		ImGui::ColorEdit3("Background color", &ctx.background_color[0]); // change background color
+		// ray-step length
+		// switch ray-casting mode
+		// manipulate transfer function (not for iso surface rendering)
 		ImGui::Render();
 		glfwSwapBuffers(ctx.window);
 	}
