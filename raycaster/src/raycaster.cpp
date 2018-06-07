@@ -349,53 +349,33 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
 }
 
 void display(Context &ctx) {
-	glClearColor(0.2, 0.2, 0.2, 0.0); //specify clear values for the color buffers RGBA
+	glClearColor(ctx.background_color[0], ctx.background_color[1], ctx.background_color[2], 0.0f); //specify clear values for the color buffers RGBA
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers to preset values
 
 	// Render the front faces of the volume bounding box to a texture via the frontFaceFBO
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-//    /*
+
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx.rayCastVolume.frontFaceFBO);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-//    */
 	drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
-//    /*
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//    */
+
 	// Render the back faces of the volume bounding box to a texture via the backFaceFBO
-//    /*
 	glCullFace(GL_FRONT);
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx.rayCastVolume.backFaceFBO);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(ctx.background_color[0], ctx.background_color[1], ctx.background_color[2], 0.0f); //specify clear values for the color buffers RGBA
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers to preset values
 	glCullFace(GL_BACK);
 	glDisable(GL_CULL_FACE);
-	/*
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, ctx.rayCastVolume.backFaceFBO);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glBlitFramebuffer(0, 0, ctx.width, ctx.height,
-					  0, 0, ctx.width, ctx.height,
-					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	*/
 
-	//...
-//    */
-	// Perform ray-casting
-	
-	//...
 	glEnable(GL_DEPTH_TEST);
 	drawRayCasting(ctx, ctx.rayCasterProgram, ctx.quadVAO, ctx.rayCastVolume);
-	//...
 }
 
 void reloadShaders(Context *ctx) {
