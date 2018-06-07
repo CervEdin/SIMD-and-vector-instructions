@@ -81,6 +81,7 @@ struct Context {
 	float angle_of_view;
 	float zoom_factor;
 	float elapsed_time;
+	glm::vec3 background_color;
 };
 
 // Returns the value of an environment variable
@@ -374,7 +375,7 @@ void display(Context &ctx) {
 	drawBoundingGeometry(ctx, ctx.boundingGeometryProgram, ctx.cubeVAO, ctx.rayCastVolume);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.2f, 0.2f, 0.2f, 0.0f); //specify clear values for the color buffers RGBA
+	glClearColor(ctx.background_color[0], ctx.background_color[1], ctx.background_color[2], 0.0f); //specify clear values for the color buffers RGBA
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers to preset values
 	glCullFace(GL_BACK);
 	glDisable(GL_CULL_FACE);
@@ -525,6 +526,7 @@ int main(void) {
 	ctx.angle_of_view = glm::radians(45.0f);
 	ctx.zoom_factor = 1.0f;
 	ctx.aspect = float(ctx.width) / float(ctx.height);
+	ctx.background_color = glm::vec3(0.2);
 	ctx.window = glfwCreateWindow(ctx.width, ctx.height, "Volume rendering", nullptr, nullptr);
 	// Initialize window object
 	glfwMakeContextCurrent(ctx.window);
