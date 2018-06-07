@@ -86,6 +86,7 @@ struct Context {
 	int render_mode;
 	float threshold;
 	float delta;
+	float tf_lower;
 	
 	glm::vec3 pos_light_pos;
 	glm::vec3 pos_light_col;
@@ -307,6 +308,7 @@ void init(Context &ctx) {
 	ctx.ambient_color = glm::vec3(0.0f);
 	ctx.specular_color = glm::vec3(0.1f, 0.12f, 0.1f);
 	ctx.specular_power = 2.5f;
+	ctx.tf_lower = 0.001f;
 
 	// Load bounding geometry (2-unit cube)
 	loadMesh((modelDir() + "cube.obj"), &ctx.cubeMesh);
@@ -357,6 +359,7 @@ void drawRayCasting(Context &ctx, GLuint program, const MeshVAO &quadVAO,
 	glUniform1f(glGetUniformLocation(program, "u_ray_step"), ctx.ray_step_length);
 	glUniform1f(glGetUniformLocation(program, "u_threshold"), ctx.threshold);
 	glUniform1f(glGetUniformLocation(program, "u_delta"), ctx.delta);
+	glUniform1f(glGetUniformLocation(program, "u_tf_lower"), ctx.tf_lower);
     
    	glUniform3fv(glGetUniformLocation(program, "u_background_color"), 1, &ctx.background_color[0]);
 
@@ -582,6 +585,7 @@ int main(void) {
 		display(ctx);
 		ImGui::ColorEdit3("Background color", &ctx.background_color[0]); // change background color
 		ImGui::SliderFloat("Step size", &ctx.ray_step_length, 0.001f, 0.1f); // ray-step length
+		ImGui::SliderFloat("TF lower", &ctx.tf_lower, 0.0f, 1.0f); // ray-step length
 		if (ImGui::Button("Switch mode")) { // switch ray-casting mode
 			ctx.render_mode = (ctx.render_mode == 0) ? 1 : 0;
 		}

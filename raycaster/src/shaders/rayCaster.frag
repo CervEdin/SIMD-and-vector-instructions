@@ -9,6 +9,7 @@ uniform int u_render_mode;
 uniform float u_ray_step;
 uniform float u_threshold;
 uniform float u_delta;
+uniform float u_tf_lower;
 uniform sampler3D u_volumeTexture;
 uniform sampler2D u_backFaceTexture;
 uniform sampler2D u_frontFaceTexture;
@@ -72,7 +73,7 @@ void main()
 
 		while (length(ray_position - ray_start) < ray_direction.a) {
 			value = texture(u_volumeTexture, ray_position).r;
-			if (value > intensity) {
+			if (value > u_tf_lower && value > intensity) {
 				intensity = value;
 			}
 			ray_position += step;
