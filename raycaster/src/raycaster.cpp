@@ -542,7 +542,7 @@ int main(void) {
 		ctx.elapsed_time = glfwGetTime();
 		ImGui_ImplGlfwGL3_NewFrame();
 		display(ctx);
-		ImGui::Text("Hello world");
+		ImGui::ColorEdit3("Background color", &ctx.background_color[0]);
 		ImGui::Render();
 		glfwSwapBuffers(ctx.window);
 	}
