@@ -23,7 +23,11 @@ uniform vec3 u_diffuse_color;
 uniform vec3 u_specular_color;
 uniform float u_specular_power;
 
+uniform mat4 u_mvp;
+uniform mat4 u_mv;
+
 vec4 gradient_estimation(vec3 uvw, vec3 position) {
+	vec3 position_eye = mat3(u_mv) * vec3(v_texcoord, 0.0);
 	vec3 sample1, sample2;
 	float sample = texture(u_volumeTexture, uvw).x;
 	sample1.x = texture(u_volumeTexture, uvw - vec3(u_delta, 0.0, 0.0)).x;
@@ -32,9 +36,11 @@ vec4 gradient_estimation(vec3 uvw, vec3 position) {
 	sample2.y = texture(u_volumeTexture, uvw + vec3(0.0, u_delta, 0.0)).x;
 	sample1.z = texture(u_volumeTexture, uvw - vec3(0.0, 0.0, u_delta)).x;
 	sample2.z = texture(u_volumeTexture, uvw + vec3(0.0, 0.0, u_delta)).x;
-	vec3 normal = normalize(sample2 - sample1);
-	vec3 light = normalize(u_pos_light_pos - uvw);
-	vec3 view = normalize(-position);
+
+	vec3 normal = normalize((sample2 - sample1));
+	vec3 light = normalize(u_pos_light_pos - position_eye);
+	vec3 view = normalize(-position_eye);
+	
 	vec3 half_way = normalize(light + view);
 	vec3 illumination_ambient = u_ambient_color;
 	vec3 illumination_diffuse = u_diffuse_color * u_pos_light_col * max(dot(normal, light), 0);
